@@ -1,15 +1,44 @@
 version: 2.1
-orbs:
-  cypress: cypress-io/cypress@1
+
 executors:
-  mac:
+  linux:
+    docker:
+      - image: cimg/base:2021.04
+        auth:
+          username: mydockerhub-user
+          password: $DOCKERHUB_PASSWORD  # context / project UI env-var reference
+
+orbs:
+  node: circleci/node@2.1.0   
+
+jobs:
+  test:
+    parameters:
+      node-version:
+        type: string
+    executors:
+    mac:
     macos:
       xcode: 10.1.0
+    steps:
+      - checkout
+      - node/install:
+          node-version: << parameters.node-version >>
+      - run : |
+               chmod +x project.sh
+               ./project.sh
 workflows:
-  build:
+  all-test:
     jobs:
-      - cypress/run:
-          name: Linux test
-      - cypress/run:
-          name: Mac test
-          executor: mac
+      - test:
+          name: "test-10.9.0"
+          node-version: 10.9.0
+      - test:
+          name: "test-11.9.0"
+          node-version: 11.9.0
+      - test:
+          name: "test-12.9.0"
+          node-version: 12.9.0
+      - test:
+          name: "test-13.9.0"
+          node-version: 13.9.0
